@@ -24,14 +24,20 @@ public class PianoMachine {
         }
     }
     
-    //TODO write method spec
+    /**
+     * Begins playing a note specified by rawPitch if the note is not already playing.
+     * @param rawPitch
+     */
     public void beginNote(Pitch rawPitch) {
     	midi.beginNote(new Pitch(0).toMidiFrequency());
     	//TODO implement for question 1
 
     }
     
-    //TODO write method spec
+    /**
+     * Stops playing a note specified by rawPitch if the note is currently playing.
+     * @param rawPitch
+     */
     public void endNote(Pitch rawPitch) {
     	midi.endNote(new Pitch(0).toMidiFrequency());
     	//TODO implement for question 1
