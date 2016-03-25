@@ -66,7 +66,6 @@ public class AlphabetGenerator {
 		return transformLetterCountsMapToArray(letterCounts, base);
     }
 
-    // test comment!
 	public static char[] transformLetterCountsMapToArray(Map<Character, Integer> letterCounts, int size) 
 	{
 		float cumulativeEndpoint = 0;
