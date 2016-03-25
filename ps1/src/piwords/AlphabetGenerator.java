@@ -3,6 +3,9 @@ package piwords;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
+
+import javafx.collections.transformation.SortedList;
 
 public class AlphabetGenerator {
     /**
@@ -71,14 +74,11 @@ public class AlphabetGenerator {
 		float cumulativeEndpoint = 0;
     	String outputString = "";
 		int totalLetterCount = getTotalLetterCount(letterCounts);
-    	for( char letter='a'; letter <= 'z'; ++letter )
+	    for( char letter : new TreeSet<Character>(letterCounts.keySet()))
     	{
-    		if( letterCounts.containsKey(letter) )
-    		{
-    			float lastcumulativeEndpoint = cumulativeEndpoint;
-    			cumulativeEndpoint += (float) letterCounts.get(letter) / totalLetterCount * size;
-    			outputString += createSimpleString(letter, Math.round(cumulativeEndpoint) - Math.round(lastcumulativeEndpoint));
-    		}
+			float lastcumulativeEndpoint = cumulativeEndpoint;
+			cumulativeEndpoint += (float) letterCounts.get(letter) / totalLetterCount * size;
+			outputString += createSimpleString(letter, Math.round(cumulativeEndpoint) - Math.round(lastcumulativeEndpoint));
     	}
 		return outputString.toCharArray();
 	}
