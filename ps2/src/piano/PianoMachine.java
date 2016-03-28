@@ -10,10 +10,15 @@ import midi.Midi;
 import music.Pitch;
 
 public class PianoMachine {
-	
-	private Midi midi;
+
+    private Midi midi;
 	private Set<Pitch> notesCurrentlyPlaying;
 	private Instrument currentInstrument;
+
+    private int octaveShift;
+    private static final int MAX_OCTAVE_SHIFT = 24;
+    private static final int MIN_OCTAVE_SHIFT = -24;
+    private static final int ONE_OCTAVE = 12;
     
 	/**
 	 * constructor for PianoMachine.
@@ -33,6 +38,8 @@ public class PianoMachine {
     	notesCurrentlyPlaying.clear();
     	
     	currentInstrument = Midi.DEFAULT_INSTRUMENT;
+    	
+    	octaveShift = 0;
     }
     
     /**
@@ -50,7 +57,7 @@ public class PianoMachine {
      * @param rawPitch
      */
     private void beginMidiNoteAndAddToCurrentlyPlaying(Pitch rawPitch) {
-        midi.beginNote(rawPitch.toMidiFrequency(), currentInstrument);
+        midi.beginNote(rawPitch.toMidiFrequency()+octaveShift, currentInstrument);
         notesCurrentlyPlaying.add(rawPitch);
     }
     
@@ -69,7 +76,7 @@ public class PianoMachine {
      * @param rawPitch
      */
     private void endMidiNoteAndRemoveFromCurrentlyPlaying(Pitch rawPitch) {
-        midi.endNote(rawPitch.toMidiFrequency(), currentInstrument);
+        midi.endNote(rawPitch.toMidiFrequency()+octaveShift, currentInstrument);
         notesCurrentlyPlaying.remove(rawPitch);
     }
     
@@ -97,14 +104,56 @@ public class PianoMachine {
         midi.beginNote(note.toMidiFrequency(), newInstrument);
     }
     
-    //TODO write method spec
+    /**
+     * Increments the octave of the PianoMachine by 1. Can repeat calls to shiftUp() to increase
+     * the octave shift to a maximum of two octaves. Calling shiftUp() while the octave is already
+     * two octaves higher than the original has no effect.
+     */
     public void shiftUp() {
-    	//TODO: implement for question 3
+        if( octaveShift+ONE_OCTAVE <= MAX_OCTAVE_SHIFT )
+            incrementAndApplyOctaveShift();
+    }
+
+    /**
+     * Increments the octaveShift by one octave and shifts all currently playing notes to the 
+     * new octaveShift. 
+     */
+    private void incrementAndApplyOctaveShift() {
+        int newOctaveShift = octaveShift + ONE_OCTAVE;
+    	for( Pitch note : notesCurrentlyPlaying )
+    	    restartNoteWithNewOctaveShift(note, newOctaveShift);
+    	octaveShift = newOctaveShift;
+    }
+
+    /**
+     * Restarts note with newOctaveShift
+     * @param note
+     * @param newOctaveShift
+     */
+    private void restartNoteWithNewOctaveShift(Pitch note, int newOctaveShift) {
+        midi.endNote(note.toMidiFrequency()+octaveShift, currentInstrument);
+        midi.beginNote(note.toMidiFrequency()+newOctaveShift, currentInstrument);
     }
     
-    //TODO write method spec
+    /**
+     * Decrements the octave of the PianoMachine by 1. Can repeat calls to shiftDown() to decrease
+     * the octave shift to a maximum of two octaves. Calling shiftDown() while the octave is already
+     * two octaves lower than the original has no effect. 
+     */
     public void shiftDown() {
-    	//TODO: implement for question 3
+        if( octaveShift-ONE_OCTAVE >= MIN_OCTAVE_SHIFT )
+            decrementAndApplyOctaveShift();
+    }
+
+    /**
+     * Decrements the octaveShift by one octave and shifts all currently playing notes to the 
+     * new octaveShift. 
+     */
+    private void decrementAndApplyOctaveShift() {
+        int newOctaveShift = octaveShift - ONE_OCTAVE;
+        for( Pitch note : notesCurrentlyPlaying )
+            restartNoteWithNewOctaveShift(note, newOctaveShift);
+        octaveShift = newOctaveShift;
     }
     
     //TODO write method spec

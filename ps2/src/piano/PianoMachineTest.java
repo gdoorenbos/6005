@@ -106,5 +106,57 @@ public class PianoMachineTest {
         assertMidiHistory("on(60,BRIGHT_PIANO) wait(100) off(60,BRIGHT_PIANO) wait(0) on(60,ELECTRIC_GRAND)");
         myPiano.endNote(new Pitch(0));
     }
+    
+    @Test
+    public void shiftUpTest() throws MidiUnavailableException
+    {
+        clearMidiHistory();
+        myPiano.shiftUp();
+        myPiano.beginNote(new Pitch(0));
+        assertMidiHistory("on(72,PIANO)");
+        myPiano.endNote(new Pitch(0));
+        myPiano.shiftDown();
+        
+        clearMidiHistory();
+        myPiano.beginNote(new Pitch(0));
+        Midi.wait(100);
+        myPiano.shiftUp();
+        assertMidiHistory("on(60,PIANO) wait(100) off(60,PIANO) wait(0) on(72,PIANO)");
+        clearMidiHistory();
+        myPiano.shiftUp();
+        assertMidiHistory("off(72,PIANO) wait(0) on(84,PIANO)");
+        clearMidiHistory();
+        myPiano.shiftUp();
+        assertMidiHistory("");
+        myPiano.shiftDown();
+        myPiano.shiftDown();
+        myPiano.endNote(new Pitch(0));
+    }
+    
+    @Test
+    public void shiftDownTest() throws MidiUnavailableException
+    {
+        clearMidiHistory();
+        myPiano.shiftDown();
+        myPiano.beginNote(new Pitch(0));
+        assertMidiHistory("on(48,PIANO)");
+        myPiano.endNote(new Pitch(0));
+        myPiano.shiftUp();
+        
+        clearMidiHistory();
+        myPiano.beginNote(new Pitch(0));
+        Midi.wait(100);
+        myPiano.shiftDown();
+        assertMidiHistory("on(60,PIANO) wait(100) off(60,PIANO) wait(0) on(48,PIANO)");
+        clearMidiHistory();
+        myPiano.shiftDown();
+        assertMidiHistory("off(48,PIANO) wait(0) on(36,PIANO)");
+        clearMidiHistory();
+        myPiano.shiftDown();
+        assertMidiHistory("");
+        myPiano.shiftUp();
+        myPiano.shiftUp();
+        myPiano.endNote(new Pitch(0));
+    }
 
 }
