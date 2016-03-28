@@ -8,6 +8,8 @@ import music.Pitch;
 public class PianoMachine {
 	
 	private Midi midi;
+	private boolean midi60IsPlaying;
+    private boolean midi61IsPlaying;
     
 	/**
 	 * constructor for PianoMachine.
@@ -22,6 +24,8 @@ public class PianoMachine {
             e1.printStackTrace();
             return;
         }
+    	midi60IsPlaying = false;
+        midi61IsPlaying = false;
     }
     
     /**
@@ -29,9 +33,16 @@ public class PianoMachine {
      * @param rawPitch
      */
     public void beginNote(Pitch rawPitch) {
-    	midi.beginNote(new Pitch(0).toMidiFrequency());
-    	//TODO implement for question 1
-
+        if( rawPitch.toMidiFrequency() == 60 && !midi60IsPlaying )
+        {
+            midi.beginNote(rawPitch.toMidiFrequency());
+            midi60IsPlaying = true;
+        }
+        else if( rawPitch.toMidiFrequency() == 61 && !midi61IsPlaying )
+        {
+            midi.beginNote(rawPitch.toMidiFrequency());
+            midi61IsPlaying = true;
+        }
     }
     
     /**
@@ -39,8 +50,16 @@ public class PianoMachine {
      * @param rawPitch
      */
     public void endNote(Pitch rawPitch) {
-    	midi.endNote(new Pitch(0).toMidiFrequency());
-    	//TODO implement for question 1
+        if( rawPitch.toMidiFrequency() == 60 && midi60IsPlaying )
+        {
+            midi.endNote(rawPitch.toMidiFrequency());
+            midi60IsPlaying = false;
+        }
+        else if( rawPitch.toMidiFrequency() == 61 && midi61IsPlaying )
+        {
+            midi.endNote(rawPitch.toMidiFrequency());
+            midi61IsPlaying = false;
+        }
     }
     
     //TODO write method spec
