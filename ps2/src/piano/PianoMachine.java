@@ -1,5 +1,8 @@
 package piano;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.sound.midi.MidiUnavailableException;
 
 import midi.Midi;
@@ -8,8 +11,7 @@ import music.Pitch;
 public class PianoMachine {
 	
 	private Midi midi;
-	private boolean midi60IsPlaying;
-    private boolean midi61IsPlaying;
+	Set<Integer> currentlyPlayingMidiNotes;
     
 	/**
 	 * constructor for PianoMachine.
@@ -24,8 +26,8 @@ public class PianoMachine {
             e1.printStackTrace();
             return;
         }
-    	midi60IsPlaying = false;
-        midi61IsPlaying = false;
+    	currentlyPlayingMidiNotes = new HashSet<Integer>();
+    	currentlyPlayingMidiNotes.clear();
     }
     
     /**
@@ -33,15 +35,10 @@ public class PianoMachine {
      * @param rawPitch
      */
     public void beginNote(Pitch rawPitch) {
-        if( rawPitch.toMidiFrequency() == 60 && !midi60IsPlaying )
+        if( !currentlyPlayingMidiNotes.contains(rawPitch.toMidiFrequency()))
         {
             midi.beginNote(rawPitch.toMidiFrequency());
-            midi60IsPlaying = true;
-        }
-        else if( rawPitch.toMidiFrequency() == 61 && !midi61IsPlaying )
-        {
-            midi.beginNote(rawPitch.toMidiFrequency());
-            midi61IsPlaying = true;
+            currentlyPlayingMidiNotes.add(rawPitch.toMidiFrequency());
         }
     }
     
@@ -50,15 +47,10 @@ public class PianoMachine {
      * @param rawPitch
      */
     public void endNote(Pitch rawPitch) {
-        if( rawPitch.toMidiFrequency() == 60 && midi60IsPlaying )
+        if( currentlyPlayingMidiNotes.contains(rawPitch.toMidiFrequency()))
         {
             midi.endNote(rawPitch.toMidiFrequency());
-            midi60IsPlaying = false;
-        }
-        else if( rawPitch.toMidiFrequency() == 61 && midi61IsPlaying )
-        {
-            midi.endNote(rawPitch.toMidiFrequency());
-            midi61IsPlaying = false;
+            currentlyPlayingMidiNotes.remove(rawPitch.toMidiFrequency());
         }
     }
     
