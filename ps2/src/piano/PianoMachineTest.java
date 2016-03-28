@@ -89,5 +89,22 @@ public class PianoMachineTest {
         myPiano.endNote(new Pitch(0));
         assertMidiHistory("");
     }
+    
+    @Test
+    public void changeInstrumentTest() throws MidiUnavailableException
+    {
+        clearMidiHistory();
+        myPiano.changeInstrument();
+        myPiano.beginNote(new Pitch(0));
+        assertMidiHistory("on(60,BRIGHT_PIANO)");
+        myPiano.endNote(new Pitch(0));
+        
+        clearMidiHistory();
+        myPiano.beginNote(new Pitch(0));
+        Midi.wait(100);
+        myPiano.changeInstrument();
+        assertMidiHistory("on(60,BRIGHT_PIANO) wait(100) off(60,BRIGHT_PIANO) wait(0) on(60,ELECTRIC_GRAND)");
+        myPiano.endNote(new Pitch(0));
+    }
 
 }

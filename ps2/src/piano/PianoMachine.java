@@ -5,13 +5,15 @@ import java.util.Set;
 
 import javax.sound.midi.MidiUnavailableException;
 
+import midi.Instrument;
 import midi.Midi;
 import music.Pitch;
 
 public class PianoMachine {
 	
 	private Midi midi;
-	Set<Pitch> notesCurrentlyPlaying;
+	private Set<Pitch> notesCurrentlyPlaying;
+	private Instrument currentInstrument;
     
 	/**
 	 * constructor for PianoMachine.
@@ -29,6 +31,8 @@ public class PianoMachine {
     	
     	notesCurrentlyPlaying = new HashSet<Pitch>();
     	notesCurrentlyPlaying.clear();
+    	
+    	currentInstrument = Midi.DEFAULT_INSTRUMENT;
     }
     
     /**
@@ -46,7 +50,7 @@ public class PianoMachine {
      * @param rawPitch
      */
     private void beginMidiNoteAndAddToCurrentlyPlaying(Pitch rawPitch) {
-        midi.beginNote(rawPitch.toMidiFrequency());
+        midi.beginNote(rawPitch.toMidiFrequency(), currentInstrument);
         notesCurrentlyPlaying.add(rawPitch);
     }
     
@@ -65,13 +69,32 @@ public class PianoMachine {
      * @param rawPitch
      */
     private void endMidiNoteAndRemoveFromCurrentlyPlaying(Pitch rawPitch) {
-        midi.endNote(rawPitch.toMidiFrequency());
+        midi.endNote(rawPitch.toMidiFrequency(), currentInstrument);
         notesCurrentlyPlaying.remove(rawPitch);
     }
     
-    //TODO write method spec
+    /**
+     * Changes the currently playing instrument in a round-robin fashion.
+     * If any notes are currently being played on the current instrument, those
+     * notes will be stopped and restarted on the new instrument. 
+     */
     public void changeInstrument() {
-       	//TODO: implement for question 2
+        Instrument newInstrument = currentInstrument.next();
+        for( Pitch note : notesCurrentlyPlaying )
+            restartNoteOnNewInstrument(note, newInstrument);
+       	currentInstrument = newInstrument;
+    }
+
+    /**
+     * Ends the note being played on currentInstrument and restarts it on newInstrument.
+     * MUST ensure that note is currently being played on the current Instrument before
+     * calling this method.
+     * @param note
+     * @param newInstrument
+     */
+    private void restartNoteOnNewInstrument(Pitch note, Instrument newInstrument) {
+        midi.endNote(note.toMidiFrequency(), currentInstrument);
+        midi.beginNote(note.toMidiFrequency(), newInstrument);
     }
     
     //TODO write method spec
