@@ -80,6 +80,11 @@ public class PianoMachineTest {
         myPiano.endNote(new Pitch(1));
         assertMidiHistory("off(61,PIANO)");
         
+        myPiano.beginNote(new Pitch(2));
+        clearMidiHistory();
+        myPiano.endNote(new Pitch(2));
+        assertMidiHistory("off(62,PIANO)");
+        
         clearMidiHistory();
         myPiano.endNote(new Pitch(0));
         assertMidiHistory("");

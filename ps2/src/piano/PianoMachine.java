@@ -11,7 +11,7 @@ import music.Pitch;
 public class PianoMachine {
 	
 	private Midi midi;
-	Set<Integer> currentlyPlayingMidiNotes;
+	Set<Pitch> notesCurrentlyPlaying;
     
 	/**
 	 * constructor for PianoMachine.
@@ -26,32 +26,47 @@ public class PianoMachine {
             e1.printStackTrace();
             return;
         }
-    	currentlyPlayingMidiNotes = new HashSet<Integer>();
-    	currentlyPlayingMidiNotes.clear();
+    	
+    	notesCurrentlyPlaying = new HashSet<Pitch>();
+    	notesCurrentlyPlaying.clear();
     }
     
     /**
-     * Begins playing a note specified by rawPitch if the note is not already playing.
+     * Begins playing the note specified by rawPitch if the note is not already playing.
      * @param rawPitch
      */
     public void beginNote(Pitch rawPitch) {
-        if( !currentlyPlayingMidiNotes.contains(rawPitch.toMidiFrequency()))
-        {
-            midi.beginNote(rawPitch.toMidiFrequency());
-            currentlyPlayingMidiNotes.add(rawPitch.toMidiFrequency());
-        }
+        if( !notesCurrentlyPlaying.contains(rawPitch) )
+            beginMidiNoteAndAddToCurrentlyPlaying(rawPitch);
+    }
+
+    /**
+     * Begins playing the midi note specified by rawPitch and adds the note to 
+     * the notesCurrentlyPlaying Set. 
+     * @param rawPitch
+     */
+    private void beginMidiNoteAndAddToCurrentlyPlaying(Pitch rawPitch) {
+        midi.beginNote(rawPitch.toMidiFrequency());
+        notesCurrentlyPlaying.add(rawPitch);
     }
     
     /**
-     * Stops playing a note specified by rawPitch if the note is currently playing.
+     * Stops playing the note specified by rawPitch if the note is currently playing.
      * @param rawPitch
      */
     public void endNote(Pitch rawPitch) {
-        if( currentlyPlayingMidiNotes.contains(rawPitch.toMidiFrequency()))
-        {
-            midi.endNote(rawPitch.toMidiFrequency());
-            currentlyPlayingMidiNotes.remove(rawPitch.toMidiFrequency());
-        }
+        if( notesCurrentlyPlaying.contains(rawPitch) )
+            endMidiNoteAndRemoveFromCurrentlyPlaying(rawPitch);
+    }
+
+    /**
+     * Stops playing the note specified by rawPitch and removes the note from the
+     * notesCurrentlyPlaying Set. 
+     * @param rawPitch
+     */
+    private void endMidiNoteAndRemoveFromCurrentlyPlaying(Pitch rawPitch) {
+        midi.endNote(rawPitch.toMidiFrequency());
+        notesCurrentlyPlaying.remove(rawPitch);
     }
     
     //TODO write method spec
