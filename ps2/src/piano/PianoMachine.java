@@ -41,15 +41,6 @@ public class PianoMachine {
     	
     	octaveShift = 0;
     }
-    
-    /**
-     * Begins playing the note specified by rawPitch if the note is not already playing.
-     * @param rawPitch
-     */
-    public void beginNote(Pitch rawPitch) {
-        if( !notesCurrentlyPlaying.contains(rawPitch) )
-            beginMidiNoteAndAddToCurrentlyPlaying(rawPitch);
-    }
 
     /**
      * Begins playing the midi note specified by rawPitch and adds the note to 
@@ -62,12 +53,12 @@ public class PianoMachine {
     }
     
     /**
-     * Stops playing the note specified by rawPitch if the note is currently playing.
+     * Begins playing the note specified by rawPitch if the note is not already playing.
      * @param rawPitch
      */
-    public void endNote(Pitch rawPitch) {
-        if( notesCurrentlyPlaying.contains(rawPitch) )
-            endMidiNoteAndRemoveFromCurrentlyPlaying(rawPitch);
+    public void beginNote(Pitch rawPitch) {
+        if( !notesCurrentlyPlaying.contains(rawPitch) )
+            beginMidiNoteAndAddToCurrentlyPlaying(rawPitch);
     }
 
     /**
@@ -81,27 +72,53 @@ public class PianoMachine {
     }
     
     /**
+     * Stops playing the note specified by rawPitch if the note is currently playing.
+     * @param rawPitch
+     */
+    public void endNote(Pitch rawPitch) {
+        if( notesCurrentlyPlaying.contains(rawPitch) )
+            endMidiNoteAndRemoveFromCurrentlyPlaying(rawPitch);
+    }
+
+    /**
+     * Ends all currently playing notes.
+     */
+    private void endAllCurrentlyPlayingNotes() {
+        Set<Pitch> tempSet = new HashSet<Pitch>(notesCurrentlyPlaying);
+        for( Pitch note : tempSet )
+            endNote(note);
+    }
+
+    /**
+     * calls beginNote(note) for every note in notes. 
+     * @param notes
+     */
+    private void beginNotesInSet(Set<Pitch> notes) {
+        for( Pitch note : notes )
+            beginNote(note);
+    }
+    
+    /**
      * Changes the currently playing instrument in a round-robin fashion.
      * If any notes are currently being played on the current instrument, those
      * notes will be stopped and restarted on the new instrument. 
      */
     public void changeInstrument() {
-        Instrument newInstrument = currentInstrument.next();
-        for( Pitch note : notesCurrentlyPlaying )
-            restartNoteOnNewInstrument(note, newInstrument);
-       	currentInstrument = newInstrument;
+        Set<Pitch> restartNotes = new HashSet<Pitch>(notesCurrentlyPlaying);
+        endAllCurrentlyPlayingNotes();
+        currentInstrument = currentInstrument.next();
+        beginNotesInSet(restartNotes);
     }
 
     /**
-     * Ends the note being played on currentInstrument and restarts it on newInstrument.
-     * MUST ensure that note is currently being played on the current Instrument before
-     * calling this method.
-     * @param note
-     * @param newInstrument
+     * Increments the octaveShift by one octave and shifts all currently playing notes to the 
+     * new octaveShift. 
      */
-    private void restartNoteOnNewInstrument(Pitch note, Instrument newInstrument) {
-        midi.endNote(note.toMidiFrequency(), currentInstrument);
-        midi.beginNote(note.toMidiFrequency(), newInstrument);
+    private void applyNewOctaveShift(int newOctaveShift) {
+        Set<Pitch> restartNotes = new HashSet<Pitch>(notesCurrentlyPlaying);
+        endAllCurrentlyPlayingNotes();
+        octaveShift = newOctaveShift;
+        beginNotesInSet(restartNotes);
     }
     
     /**
@@ -110,29 +127,9 @@ public class PianoMachine {
      * two octaves higher than the original has no effect.
      */
     public void shiftUp() {
-        if( octaveShift+ONE_OCTAVE <= MAX_OCTAVE_SHIFT )
-            incrementAndApplyOctaveShift();
-    }
-
-    /**
-     * Increments the octaveShift by one octave and shifts all currently playing notes to the 
-     * new octaveShift. 
-     */
-    private void incrementAndApplyOctaveShift() {
         int newOctaveShift = octaveShift + ONE_OCTAVE;
-    	for( Pitch note : notesCurrentlyPlaying )
-    	    restartNoteWithNewOctaveShift(note, newOctaveShift);
-    	octaveShift = newOctaveShift;
-    }
-
-    /**
-     * Restarts note with newOctaveShift
-     * @param note
-     * @param newOctaveShift
-     */
-    private void restartNoteWithNewOctaveShift(Pitch note, int newOctaveShift) {
-        midi.endNote(note.toMidiFrequency()+octaveShift, currentInstrument);
-        midi.beginNote(note.toMidiFrequency()+newOctaveShift, currentInstrument);
+        if( newOctaveShift <= MAX_OCTAVE_SHIFT )
+            applyNewOctaveShift(newOctaveShift);
     }
     
     /**
@@ -141,19 +138,9 @@ public class PianoMachine {
      * two octaves lower than the original has no effect. 
      */
     public void shiftDown() {
-        if( octaveShift-ONE_OCTAVE >= MIN_OCTAVE_SHIFT )
-            decrementAndApplyOctaveShift();
-    }
-
-    /**
-     * Decrements the octaveShift by one octave and shifts all currently playing notes to the 
-     * new octaveShift. 
-     */
-    private void decrementAndApplyOctaveShift() {
         int newOctaveShift = octaveShift - ONE_OCTAVE;
-        for( Pitch note : notesCurrentlyPlaying )
-            restartNoteWithNewOctaveShift(note, newOctaveShift);
-        octaveShift = newOctaveShift;
+        if( newOctaveShift >= MIN_OCTAVE_SHIFT )
+            applyNewOctaveShift(newOctaveShift);
     }
     
     //TODO write method spec
