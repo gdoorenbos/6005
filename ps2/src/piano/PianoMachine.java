@@ -11,6 +11,7 @@ import midi.Instrument;
 import midi.Midi;
 import music.Pitch;
 import music.NoteEvent;
+import music.NoteEvent.Kind;
 
 public class PianoMachine {
 
@@ -53,6 +54,16 @@ public class PianoMachine {
     }
 
     /**
+     * Adds NoteEvent to recording List if isRecording is true. 
+     * @param note Pitch being played/stopped
+     * @param kind NoteEvent.kind, either start or stop
+     */
+    private void recordNoteIfRecording(Pitch note, NoteEvent.Kind kind) {
+        if( isRecording )
+            recording.add(new NoteEvent(note, System.currentTimeMillis(), currentInstrument, kind));
+    }
+
+    /**
      * Begins playing the midi note specified by rawPitch and adds the note to 
      * the notesCurrentlyPlaying Set. 
      * @param rawPitch
@@ -60,12 +71,7 @@ public class PianoMachine {
     private void beginMidiNoteAndAddToCurrentlyPlaying(Pitch rawPitch) {
         midi.beginNote(rawPitch.toMidiFrequency()+octaveShift, currentInstrument);
         notesCurrentlyPlaying.add(rawPitch);
-        
-        if( isRecording )
-        {
-            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis(), currentInstrument, NoteEvent.Kind.start);
-            recording.add(event);
-        }
+        recordNoteIfRecording(rawPitch, NoteEvent.Kind.start);
     }
     
     /**
@@ -85,12 +91,7 @@ public class PianoMachine {
     private void endMidiNoteAndRemoveFromCurrentlyPlaying(Pitch rawPitch) {
         midi.endNote(rawPitch.toMidiFrequency()+octaveShift, currentInstrument);
         notesCurrentlyPlaying.remove(rawPitch);
-        
-        if( isRecording )
-        {
-            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis(), currentInstrument, NoteEvent.Kind.stop);
-            recording.add(event);
-        }
+        recordNoteIfRecording(rawPitch, NoteEvent.Kind.stop);
     }
     
     /**
