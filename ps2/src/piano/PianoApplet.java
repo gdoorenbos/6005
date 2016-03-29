@@ -32,6 +32,15 @@ public class PianoApplet extends Applet {
         // when a key is pressed in the GUI
     	addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
+                /* The following check prevents us from executing a KeyEvent that happened a 
+                 * (relatively) long time ago. This ultimately prevents us from executing a 
+                 * whole bunch of backed up Events at once, for example, when keys are pressed
+                 * during a playback of a recording. 
+                 */
+                long timeoutThreshold = 100;
+                if ( (System.currentTimeMillis() - e.getWhen()) > timeoutThreshold )
+                    return;
+                
             	System.out.println("key pressed");
                 char key = (char) e.getKeyCode();
                 switch (key) {
