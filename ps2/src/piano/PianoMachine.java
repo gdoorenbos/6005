@@ -24,7 +24,6 @@ public class PianoMachine {
     private static final int ONE_OCTAVE = 12;
     
     private boolean isRecording;
-    private long recordingStartTime;
     private List<NoteEvent> recording;
     
 	/**
@@ -49,7 +48,6 @@ public class PianoMachine {
     	octaveShift = 0;
     	
     	isRecording = false;
-    	recordingStartTime = 0;
     	recording = new LinkedList<NoteEvent>();
     	recording.clear();
     }
@@ -65,7 +63,7 @@ public class PianoMachine {
         
         if( isRecording )
         {
-            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis()-recordingStartTime, currentInstrument, NoteEvent.Kind.start);
+            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis(), currentInstrument, NoteEvent.Kind.start);
             recording.add(event);
         }
     }
@@ -90,7 +88,7 @@ public class PianoMachine {
         
         if( isRecording )
         {
-            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis()-recordingStartTime, currentInstrument, NoteEvent.Kind.stop);
+            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis(), currentInstrument, NoteEvent.Kind.stop);
             recording.add(event);
         }
     }
@@ -175,42 +173,61 @@ public class PianoMachine {
     public boolean toggleRecording() {
         isRecording = !isRecording;
         if( isRecording )
-        {
             recording.clear();
-            recordingStartTime = System.currentTimeMillis();
-        }
         return isRecording;
     }
     
     /**
-     * plays the stored recording. If nothing is stored, nothing is played. 
+     * Executes the NoteEvent. If the NoteEvent Kind is start, calls beginNote() on the pitch
+     * given in the NoteEvent. If the NoteEvent Kind is stop, calls endNote() on the pitch given
+     * in the NoteEvent. 
+     * @param event NoteEvent to execute
      */
-    protected void playback() {
-        long lastNoteTime = 0;
-        boolean firstNote = true;
-        for( NoteEvent event : recording )
-        {
-            if( firstNote )
-            {
-                firstNote = false;
-                lastNoteTime = event.getTime();
-            }
-            else
-            {
-                int waitTime = (int) (event.getTime() - lastNoteTime) / 10;
-                Midi.wait(waitTime);
-                lastNoteTime = event.getTime();
-            }
-            
-            if( event.getKind() == NoteEvent.Kind.start )
-            {
-                beginNote(event.getPitch());
-            }
-            else
-            {
-                endNote(event.getPitch());
-            }
-        }
+    private void playbackNoteEvent(NoteEvent event) {
+        if( event.getKind() == NoteEvent.Kind.start )
+            beginNote(event.getPitch());
+        else
+            endNote(event.getPitch());
     }
 
+    /**
+     * plays the first NoteEvent in the recording List. This is a trivial alias method that
+     * was added for readability.
+     */
+    private void playbackFirstNoteEvent() {
+        playbackNoteEvent(recording.get(0));
+    }
+
+    /**
+     * Plays back a NoteEvent that is _NOT_ the first NoteEvent in the recording List. 
+     * Attempting to call this method on the first NoteEvent will result in an OutOfBounds
+     * exception, as the method accesses the previous NoteEvent to determine the amount
+     * of time to wait before playing/stopping the note. 
+     * @param eventIndex index of the NoteEvent to playback.
+     */
+    private void playbackNoteEventAfterFirst(int eventIndex) {
+        NoteEvent event = recording.get(eventIndex);
+        NoteEvent prevEvent = recording.get(eventIndex-1);
+        Midi.wait((int) (event.getTime() - prevEvent.getTime()) / 10);
+        playbackNoteEvent(event);
+    }
+
+    /**
+     * Plays back all NoteEvents stored in the recording List. recording.size() must be 
+     * greater than 0, or an OutOfBounds exception will be thrown. 
+     */
+    private void playbackAllNoteEvents() {
+        playbackFirstNoteEvent();
+        for( int eventIndex=1; eventIndex < recording.size(); ++eventIndex )
+            playbackNoteEventAfterFirst(eventIndex);
+    }
+    
+    /**
+     * plays the stored recording. If nothing is stored, nothing is played. 
+     * Also, cannot execute a playback if recording is currently taking place.
+     */
+    protected void playback() {
+        if( !isRecording && !recording.isEmpty() )
+            playbackAllNoteEvents();
+    }
 }
