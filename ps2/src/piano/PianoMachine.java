@@ -11,7 +11,6 @@ import midi.Instrument;
 import midi.Midi;
 import music.Pitch;
 import music.NoteEvent;
-import music.NoteEvent.Kind;
 
 public class PianoMachine {
 
