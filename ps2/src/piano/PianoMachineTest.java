@@ -101,9 +101,11 @@ public class PianoMachineTest {
         
         clearMidiHistory();
         myPiano.beginNote(new Pitch(0));
+        assertMidiHistory("on(60,BRIGHT_PIANO)");
         Midi.wait(100);
+        clearMidiHistory();
         myPiano.changeInstrument();
-        assertMidiHistory("on(60,BRIGHT_PIANO) wait(100) off(60,BRIGHT_PIANO) wait(0) on(60,ELECTRIC_GRAND)");
+        assertMidiHistory("off(60,BRIGHT_PIANO) wait(0) on(60,ELECTRIC_GRAND)");
         myPiano.endNote(new Pitch(0));
     }
     
@@ -157,6 +159,20 @@ public class PianoMachineTest {
         myPiano.shiftUp();
         myPiano.shiftUp();
         myPiano.endNote(new Pitch(0));
+    }
+    
+    @Test
+    public void recordingAndPlaybackTest() throws MidiUnavailableException
+    {
+        clearMidiHistory();
+        myPiano.toggleRecording();
+        myPiano.beginNote(new Pitch(0));
+        Midi.wait(10);
+        myPiano.endNote(new Pitch(0));
+        myPiano.toggleRecording();
+        clearMidiHistory();
+        myPiano.playback();
+        assertMidiHistory("on(60,PIANO) wait(10) off(60,PIANO)");
     }
 
 }

@@ -1,6 +1,8 @@
 package piano;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.sound.midi.MidiUnavailableException;
@@ -8,6 +10,7 @@ import javax.sound.midi.MidiUnavailableException;
 import midi.Instrument;
 import midi.Midi;
 import music.Pitch;
+import music.NoteEvent;
 
 public class PianoMachine {
 
@@ -19,6 +22,10 @@ public class PianoMachine {
     private static final int MAX_OCTAVE_SHIFT = 24;
     private static final int MIN_OCTAVE_SHIFT = -24;
     private static final int ONE_OCTAVE = 12;
+    
+    private boolean isRecording;
+    private long recordingStartTime;
+    private List<NoteEvent> recording;
     
 	/**
 	 * constructor for PianoMachine.
@@ -40,6 +47,11 @@ public class PianoMachine {
     	currentInstrument = Midi.DEFAULT_INSTRUMENT;
     	
     	octaveShift = 0;
+    	
+    	isRecording = false;
+    	recordingStartTime = 0;
+    	recording = new LinkedList<NoteEvent>();
+    	recording.clear();
     }
 
     /**
@@ -50,6 +62,12 @@ public class PianoMachine {
     private void beginMidiNoteAndAddToCurrentlyPlaying(Pitch rawPitch) {
         midi.beginNote(rawPitch.toMidiFrequency()+octaveShift, currentInstrument);
         notesCurrentlyPlaying.add(rawPitch);
+        
+        if( isRecording )
+        {
+            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis()-recordingStartTime, currentInstrument, NoteEvent.Kind.start);
+            recording.add(event);
+        }
     }
     
     /**
@@ -69,6 +87,12 @@ public class PianoMachine {
     private void endMidiNoteAndRemoveFromCurrentlyPlaying(Pitch rawPitch) {
         midi.endNote(rawPitch.toMidiFrequency()+octaveShift, currentInstrument);
         notesCurrentlyPlaying.remove(rawPitch);
+        
+        if( isRecording )
+        {
+            NoteEvent event = new NoteEvent(rawPitch, System.currentTimeMillis()-recordingStartTime, currentInstrument, NoteEvent.Kind.stop);
+            recording.add(event);
+        }
     }
     
     /**
@@ -143,15 +167,50 @@ public class PianoMachine {
             applyNewOctaveShift(newOctaveShift);
     }
     
-    //TODO write method spec
+    /**
+     * Turn recording on if the PianoMachine is not already recording, and turns recording off
+     * if the PianoMachine is currently recording.
+     * @return true if recording was turned on, false otherwise. 
+     */
     public boolean toggleRecording() {
-    	return false;
-    	//TODO: implement for question 4
+        isRecording = !isRecording;
+        if( isRecording )
+        {
+            recording.clear();
+            recordingStartTime = System.currentTimeMillis();
+        }
+        return isRecording;
     }
     
-    //TODO write method spec
-    protected void playback() {    	
-        //TODO: implement for question 4
+    /**
+     * plays the stored recording. If nothing is stored, nothing is played. 
+     */
+    protected void playback() {
+        long lastNoteTime = 0;
+        boolean firstNote = true;
+        for( NoteEvent event : recording )
+        {
+            if( firstNote )
+            {
+                firstNote = false;
+                lastNoteTime = event.getTime();
+            }
+            else
+            {
+                int waitTime = (int) (event.getTime() - lastNoteTime) / 10;
+                Midi.wait(waitTime);
+                lastNoteTime = event.getTime();
+            }
+            
+            if( event.getKind() == NoteEvent.Kind.start )
+            {
+                beginNote(event.getPitch());
+            }
+            else
+            {
+                endNote(event.getPitch());
+            }
+        }
     }
 
 }
