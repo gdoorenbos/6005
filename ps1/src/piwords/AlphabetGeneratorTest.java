@@ -194,5 +194,14 @@ public class AlphabetGeneratorTest
 		assertTransformLetterCountsMapToArrayOutput(inputMap, 2, new char[] {'a', 'b'});
 		assertTransformLetterCountsMapToArrayOutput(inputMap, 3, new char[] {'a', 'a', 'b'});
 		assertTransformLetterCountsMapToArrayOutput(inputMap, 4, new char[] {'a', 'a', 'b', 'b'});
+		
+		inputMap.clear();
+		inputMap.put('h', 1);
+		inputMap.put('a', 2);
+		inputMap.put('z', 1);
+		inputMap.put('r', 1);
+		inputMap.put('d', 1);
+		assertTransformLetterCountsMapToArrayOutput(inputMap, 6, "aadhrz".toCharArray());
+		assertTransformLetterCountsMapToArrayOutput(inputMap, 12, "aaaaddhhrrzz".toCharArray());
 	}
 }
