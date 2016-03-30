@@ -19,6 +19,7 @@ public class PianoMachine {
 	private Instrument currentInstrument;
 
     private int octaveShift;
+    private static final int NO_OCTAVE_SHIFT = 0;
     private static final int MAX_OCTAVE_SHIFT = 24;
     private static final int MIN_OCTAVE_SHIFT = -24;
     private static final int ONE_OCTAVE = 12;
@@ -39,17 +40,35 @@ public class PianoMachine {
             e1.printStackTrace();
             return;
         }
-    	
-    	notesCurrentlyPlaying = new HashSet<Pitch>();
+
+        initPianoMachineState();
+    }
+
+    /**
+     * Initializes any variables needed to keep track of this object's state.
+     */
+    private void initPianoMachineState() {
+        octaveShift = NO_OCTAVE_SHIFT;
+        currentInstrument = Midi.DEFAULT_INSTRUMENT;
+    	initNotesCurrentlyPlaying();
+        initRecordingState();
+    }
+
+    /**
+     * Initializes notesCurrentlyPlaying to an empty HashSet.
+     */
+    private void initNotesCurrentlyPlaying() {
+        notesCurrentlyPlaying = new HashSet<Pitch>();
     	notesCurrentlyPlaying.clear();
-    	
-    	currentInstrument = Midi.DEFAULT_INSTRUMENT;
-    	
-    	octaveShift = 0;
-    	
-    	isRecording = false;
-    	recording = new LinkedList<NoteEvent>();
-    	recording.clear();
+    }
+
+    /**
+     * Initializes variables used to track the recording state. 
+     */
+    private void initRecordingState() {
+        isRecording = false;
+        recording = new LinkedList<NoteEvent>();
+        recording.clear();
     }
 
     /**
